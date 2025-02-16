@@ -1,7 +1,7 @@
-CXX=g++
+CXX=g++-10
 CPPFLAGS+=-Dunix
-# CPPFLAGS+=NOJIT
-CXXFLAGS=-O3 -march=native
+CPPFLAGS+=-DNOJIT
+CXXFLAGS=-O3 -mcpu=native
 PREFIX=/usr/local
 BINDIR=$(PREFIX)/bin
 MANDIR=$(PREFIX)/share/man

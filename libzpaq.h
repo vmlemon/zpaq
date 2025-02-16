@@ -1288,15 +1288,15 @@ private:
 //////////////////////////// Compiler ////////////////////////
 
 // Input ZPAQL source code with args and store the compiled code
-// in hz and pz and write pcomp_cmd to out2.
+// in myhz and pz and write pcomp_cmd to out2.
 
 class Compiler {
 public:
-  Compiler(const char* in, int* args, ZPAQL& hz, ZPAQL& pz, Writer* out2);
+  Compiler(const char* in, int* args, ZPAQL& myhz, ZPAQL& pz, Writer* out2);
 private:
   const char* in;  // ZPAQL source code
   int* args;       // Array of up to 9 args, default NULL = all 0
-  ZPAQL& hz;       // Output of COMP and HCOMP sections
+  ZPAQL& myhz;       // Output of COMP and HCOMP sections
   ZPAQL& pz;       // Output of PCOMP section
   Writer* out2;    // Output ... of "PCOMP ... ;"
   int line;        // Input line number for reporting errors

@@ -2696,42 +2696,42 @@ int Compiler::compile_comp(ZPAQL& z) {
 // command in pcomp_cmd. Replace "$1..$9+n" with args[0..8]+n
 
 Compiler::Compiler(const char* in_, int* args_, ZPAQL& hz_, ZPAQL& pz_,
-                   Writer* out2_): in(in_), args(args_), hz(hz_), pz(pz_),
+                   Writer* out2_): in(in_), args(args_), myhz(hz_), pz(pz_),
                    out2(out2_), if_stack(1000), do_stack(1000) {
   line=1;
   state=0;
-  hz.clear();
+  myhz.clear();
   pz.clear();
-  hz.header.resize(68000); 
+  myhz.header.resize(68000); 
 
   // Compile the COMP section of header
   rtoken("comp");
-  hz.header[2]=rtoken(0, 255);  // hh
-  hz.header[3]=rtoken(0, 255);  // hm
-  hz.header[4]=rtoken(0, 255);  // ph
-  hz.header[5]=rtoken(0, 255);  // pm
-  const int n=hz.header[6]=rtoken(0, 255);  // n
-  hz.cend=7;
+  myhz.header[2]=rtoken(0, 255);  // hh
+  myhz.header[3]=rtoken(0, 255);  // hm
+  myhz.header[4]=rtoken(0, 255);  // ph
+  myhz.header[5]=rtoken(0, 255);  // pm
+  const int n=myhz.header[6]=rtoken(0, 255);  // n
+  myhz.cend=7;
   for (int i=0; i<n; ++i) {
     rtoken(i, i);
     CompType type=CompType(rtoken(compname));
-    hz.header[hz.cend++]=type;
+    myhz.header[myhz.cend++]=type;
     int clen=libzpaq::compsize[type&255];
     if (clen<1 || clen>10) syntaxError("invalid component");
     for (int j=1; j<clen; ++j)
-      hz.header[hz.cend++]=rtoken(0, 255);  // component arguments
+      myhz.header[myhz.cend++]=rtoken(0, 255);  // component arguments
   }
-  hz.header[hz.cend++];  // end
-  hz.hbegin=hz.hend=hz.cend+128;
+  myhz.header[myhz.cend++];  // end
+  myhz.hbegin=myhz.hend=myhz.cend+128;
 
   // Compile HCOMP
   rtoken("hcomp");
-  int op=compile_comp(hz);
+  int op=compile_comp(myhz);
 
   // Compute header size
-  int hsize=hz.cend-2+hz.hend-hz.hbegin;
-  hz.header[0]=hsize&255;
-  hz.header[1]=hsize>>8;
+  int hsize=myhz.cend-2+myhz.hend-myhz.hbegin;
+  myhz.header[0]=hsize&255;
+  myhz.header[1]=hsize>>8;
 
   // Compile POST 0 END
   if (op==POST) {
@@ -2742,8 +2742,8 @@ Compiler::Compiler(const char* in_, int* args_, ZPAQL& hz_, ZPAQL& pz_,
   // Compile PCOMP pcomp_cmd ; program... END
   else if (op==PCOMP) {
     pz.header.resize(68000);
-    pz.header[4]=hz.header[4];  // ph
-    pz.header[5]=hz.header[5];  // pm
+    pz.header[4]=myhz.header[4];  // ph
+    pz.header[5]=myhz.header[5];  // pm
     pz.cend=8;
     pz.hbegin=pz.hend=pz.cend+128;
 

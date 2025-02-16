@@ -982,9 +982,9 @@ struct Block {
   unsigned size;        // number of fragments to decompress
   unsigned frags;       // number of fragments in block
   unsigned extracted;   // number of fragments decompressed OK
-  enum {READY, WORKING, GOOD, BAD} state;
+  enum {ZREADY, ZWORKING, ZGOOD, ZBAD} state;
   Block(unsigned s, int64_t o): offset(o), usize(-1), bsize(0), start(s),
-      size(0), frags(0), extracted(0), state(READY) {}
+      size(0), frags(0), extracted(0), state(ZREADY) {}
 };
 
 // Version info
@@ -2765,7 +2765,7 @@ bool Jidac::equal(DTMap::const_iterator p, const char* filename) {
 }
 
 // An extract job is a set of blocks with at least one file pointing to them.
-// Blocks are extracted in separate threads, set READY -> WORKING.
+// Blocks are extracted in separate threads, set ZREADY -> ZWORKING.
 // A block is extracted to memory up to the last fragment that has a file
 // pointing to it. Then the checksums are verified. Then for each file
 // pointing to the block, each of the fragments that it points to within
@@ -2792,7 +2792,7 @@ struct ExtractJob {         // list of jobs
   }
 };
 
-// Decompress blocks in a job until none are READY
+// Decompress blocks in a job until none are ZREADY
 ThreadReturn decompressThread(void* arg) {
   ExtractJob& job=*(ExtractJob*)arg;
   int jobNumber=0;
@@ -2807,7 +2807,7 @@ ThreadReturn decompressThread(void* arg) {
   if (!in.isopen()) return 0;
   StringBuffer out;
 
-  // Look for next READY job.
+  // Look for next ZREADY job.
   int next=0;  // current job
   while (true) {
     lock(job.mutex);
@@ -2819,8 +2819,8 @@ ThreadReturn decompressThread(void* arg) {
         return 0;
       }
       Block& b=job.jd.block[k];
-      if (b.state==Block::READY && b.size>0 && b.usize>=0) {
-        b.state=Block::WORKING;
+      if (b.state==Block::ZREADY && b.size>0 && b.usize>=0) {
+        b.state=Block::ZWORKING;
         release(job.mutex);
         next=k;
         break;
@@ -2906,7 +2906,7 @@ ThreadReturn decompressThread(void* arg) {
       lock(job.mutex);
       fflush(stdout);
       fprintf(stderr, "Job %d killed: %s\n", jobNumber, e.what());
-      b.state=Block::READY;
+      b.state=Block::ZREADY;
       b.extracted=0;
       out.resize(0);
       release(job.mutex);
